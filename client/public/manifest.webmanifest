@@ -1,0 +1,17 @@
+{
+  "name": "OpenClip",
+  "short_name": "OpenClip",
+  "description": "Discover and save public videos you are permitted to download.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f5f1",
+  "theme_color": "#204d3e",
+  "icons": [
+    {
+      "src": "/icons/openclip.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

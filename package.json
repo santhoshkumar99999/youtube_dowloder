@@ -1,0 +1,20 @@
+{
+  "name": "openclip",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "workspaces": [
+    "server",
+    "client",
+    "mcp"
+  ],
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev --workspace server\" \"npm:dev --workspace client\"",
+    "build": "npm run build --workspace server && npm run build --workspace client && npm run build --workspace mcp",
+    "test": "npm test --workspace server",
+    "start": "npm start --workspace server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+client/dist/
+server/dist/
+mcp/dist/
+.env
+*.log
+data/
+downloads/

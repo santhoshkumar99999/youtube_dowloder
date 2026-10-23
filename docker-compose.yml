@@ -1,0 +1,18 @@
+services:
+  openclip:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: 3000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      REPORTS_FILE: /app/data/reports.jsonl
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - openclip-reports:/app/data
+    init: true
+
+volumes:
+  openclip-reports:

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "openclip": {
+      "command": "node",
+      "args": ["C:\\path\\to\\openclip\\mcp\\dist\\index.js"],
+      "env": {
+        "OPENCLIP_API_URL": "http://localhost:3000",
+        "OPENCLIP_DOWNLOAD_DIR": "C:\\Users\\YourName\\Downloads\\OpenClip"
+      }
+    }
+  }
+}
