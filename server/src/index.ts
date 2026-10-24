@@ -91,9 +91,17 @@ function runYtDlp(args: string[], timeout = requestTimeoutMs) {
 }
 
 function publicError(error: unknown): string {
-  const detail = error instanceof Error && "stderr" in error && typeof error.stderr === "string"
-    ? error.stderr
-    : error instanceof Error ? error.message : String(error);
+  if (
+    error instanceof Error &&
+    "code" in error &&
+    error.code === "ENOENT"
+  ) {
+    return "A required media tool is not installed or available on PATH. Install yt-dlp and ffmpeg, then retry.";
+  }
+  const stderr = error instanceof Error && "stderr" in error && typeof error.stderr === "string"
+    ? error.stderr.trim()
+    : "";
+  const detail = stderr || (error instanceof Error ? error.message : String(error));
   const message = detail || "The platform could not provide this video.";
   if (/login.?required|login_required|authentication required/i.test(message)) {
     return "Instagram requires a logged-in session for this post. OpenClip supports public content only and will not use account cookies.";

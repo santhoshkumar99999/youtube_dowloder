@@ -42,7 +42,15 @@ function detectPlatform(input: string): string | null {
 
 function formatDuration(seconds: number | null) {
   if (seconds === null) return "—";
-  return new Intl.DateTimeFormat("en", { minute: "2-digit", second: "2-digit", timeZone: "UTC" }).format(seconds * 1000);
+  const totalSeconds = Math.floor(seconds);
+  const minutes = Math.floor(totalSeconds / 60);
+  const formattedSeconds = String(totalSeconds % 60).padStart(2, "0");
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const formattedMinutes = String(minutes % 60).padStart(2, "0");
+    return `${hours}:${formattedMinutes}:${formattedSeconds}`;
+  }
+  return `${String(minutes).padStart(2, "0")}:${formattedSeconds}`;
 }
 
 function proxyImageUrl(url: string | null) {
@@ -70,6 +78,18 @@ function saveBlob(blob: Blob, filename: string) {
 async function responseError(response: Response) {
   const body = await response.json().catch(() => ({}));
   return typeof body.error === "string" ? body.error : `Request failed (${response.status}).`;
+}
+
+function downloadExtension(format: DownloadFormat, response: Response) {
+  if (format !== "thumbnail") return format;
+  const extensions: Record<string, string> = {
+    "image/avif": "avif",
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+  const contentType = response.headers.get("Content-Type")?.split(";", 1)[0].toLowerCase();
+  return extensions[contentType ?? ""] ?? "jpg";
 }
 
 export default function App() {
@@ -203,7 +223,7 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: link }),
-        signal: AbortSignal.timeout(30_000),
+        signal: AbortSignal.timeout(130_000),
       });
       if (!response.ok) throw new Error(await responseError(response));
       setVideo(await response.json() as VideoInfo);
@@ -371,7 +391,7 @@ export default function App() {
       }
       if (received === 0) throw new Error("The backend returned an empty download.");
       const blob = new Blob(chunks);
-      const extension = selectedFormat === "thumbnail" ? "jpg" : selectedFormat;
+      const extension = downloadExtension(selectedFormat, response);
       saveBlob(blob, `${(video?.title ?? "openclip-video").replace(/[\\/:*?"<>|]/g, "_")}.${extension}`);
       setDownloadProgress(100);
       setHistory((items) => [
@@ -707,29 +727,47 @@ export default function App() {
           <span>{t("officialApiVideos")}</span>
         </div>
         <div className="discovery-toolbar">
-          <label><span>{t("platform")}</span><select value={searchPlatform} onChange={(event) => setSearchPlatform(event.target.value as SearchPlatform)}>
+          <label><span>{t("platform")}</span><select value={searchPlatform} onChange={(event) => {
+            setSearchPlatform(event.target.value as SearchPlatform);
+            setNextPageToken(null);
+          }}>
             <option value="youtube">YouTube</option><option value="instagram">Instagram</option><option value="tiktok">TikTok</option>
           </select></label>
           <label className="discovery-query"><span>{t("search")}</span><input
             value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
+            onChange={(event) => {
+              setSearchQuery(event.target.value);
+              setNextPageToken(null);
+            }}
             onKeyDown={(event) => { if (event.key === "Enter") void loadDiscovery("search"); }}
             placeholder={searchPlatform === "instagram" ? "Try a hashtag, e.g. travel" : "Search public videos"}
             maxLength={200}
           /></label>
-          <label><span>{t("sortBy")}</span><select value={searchSort} onChange={(event) => setSearchSort(event.target.value as "views" | "date" | "likes")}>
+          <label><span>{t("sortBy")}</span><select value={searchSort} onChange={(event) => {
+            setSearchSort(event.target.value as "views" | "date" | "likes");
+            setNextPageToken(null);
+          }}>
             <option value="views">{t("views")}</option><option value="date">{t("date")}</option><option value="likes">{t("likes")}</option>
           </select></label>
           <button className="discover-button" onClick={() => void loadDiscovery("search")} disabled={discoveryLoading}>{t("search")} <span>→</span></button>
         </div>
         <div className="discovery-filters">
-          <label><span>{t("dateFilter")}</span><select value={dateFilter} onChange={(event) => setDateFilter(event.target.value)}>
+          <label><span>{t("dateFilter")}</span><select value={dateFilter} onChange={(event) => {
+            setDateFilter(event.target.value);
+            setNextPageToken(null);
+          }}>
             <option value="any">{t("anyTime")}</option><option value="day">{t("pastDay")}</option><option value="week">{t("pastWeek")}</option><option value="month">{t("pastMonth")}</option><option value="year">{t("pastYear")}</option>
           </select></label>
-          <label><span>{t("duration")}</span><select value={durationFilter} disabled={searchPlatform === "instagram"} onChange={(event) => setDurationFilter(event.target.value)}>
+          <label><span>{t("duration")}</span><select value={durationFilter} disabled={searchPlatform === "instagram"} onChange={(event) => {
+            setDurationFilter(event.target.value);
+            setNextPageToken(null);
+          }}>
             <option value="any">{t("anyLength")}</option><option value="short">{t("underFourMinutes")}</option><option value="medium">{t("fourToTwentyMinutes")}</option><option value="long">{t("overTwentyMinutes")}</option>
           </select></label>
-          <label><span>{t("region")}</span><select value={region} onChange={(event) => setRegion(event.target.value)}>
+          <label><span>{t("region")}</span><select value={region} onChange={(event) => {
+            setRegion(event.target.value);
+            setNextPageToken(null);
+          }}>
             <option value="US">United States</option><option value="IN">India</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option>
           </select></label>
           <button className="trending-button" onClick={() => void loadDiscovery("trending")} disabled={discoveryLoading}>↗ {t("topVideos")}</button>

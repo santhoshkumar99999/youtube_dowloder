@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: openclip-api-santhosh
+    runtime: docker
+    plan: free
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: REPORTS_FILE
+        value: /tmp/openclip-reports.jsonl

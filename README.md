@@ -4,14 +4,14 @@ OpenClip is an open-source web app for discovering and saving public videos you 
 
 ## Local setup
 
-Requirements: Node.js 20+, npm, Python with `yt-dlp`, and `ffmpeg` on `PATH`. Node.js 22 is recommended.
+Requirements: Node.js 20+, npm, Python with the `yt-dlp` executable on `PATH`, and `ffmpeg` on `PATH`. Node.js 22 is recommended. On Windows, add Python's user Scripts directory to `PATH` if `yt-dlp` was installed with `pip install --user yt-dlp`.
 
 1. Copy `.env.example` to `.env` and adjust values if needed.
 2. Install dependencies: `npm install`
 3. Start the API and web app: `npm run dev`
 4. Open the Vite URL shown in the terminal (normally http://localhost:5173).
 
-The React client talks only to the OpenClip backend at `/api/*`; Vite proxies those requests to port 3000 during local development. In production, serve the client and API behind the same origin or configure `CORS_ORIGIN`.
+The React client talks only to the OpenClip backend at `/api/*`; Vite proxies those requests to port 3000 during local development. Set `VITE_API_PROXY_TARGET` if your local API uses a different address. In production, serve the client and API behind the same origin or configure `CORS_ORIGIN`.
 
 ## Official discovery API keys
 
@@ -57,6 +57,7 @@ The server reads `OPENCLIP_API_URL` (default `http://localhost:3000`) and `OPENC
 
 OpenClip requires `yt-dlp` and `ffmpeg`, so choose a deployment image/runtime where both can be installed; verify free-tier CPU, memory, disk, networking, and usage limits before deploying.
 
+- **Vercel + Render:** Vercel serves the React client and proxies `/api/*` and `/docs` to the Docker API on Render. The repository includes `vercel.json` and `render.yaml` for this split deployment. Deploy the Render Blueprint first, confirm the API health check at `/api/health`, then import the same GitHub repository into the Vercel project. If Render assigns a different service hostname, update the destinations in `vercel.json` before deploying the client. Render's free service can sleep while idle, has ephemeral storage, and may not have enough resources for large video conversions; use a suitable paid instance and persistent disk for reliable downloads and report retention.
 - **Render:** create a Docker web service from this repository, add only the needed API secrets as environment variables, and use a persistent disk if you need to retain content reports.
 - **Railway:** deploy using the `Dockerfile`, configure the variables from `.env.example` in the service settings, and attach a volume for `REPORTS_FILE` if reports must persist.
 - **Home server:** use Docker Compose behind an HTTPS reverse proxy. Keep API keys server-side, expose only HTTPS, back up the report volume as appropriate, and monitor resource use.
