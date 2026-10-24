@@ -61,6 +61,7 @@ h1 span { color: #527467; font-style: italic; }
 .video-platform span, .video-meta span { color: #b0b8b1; margin: 0 5px; }
 .video-details h2 { color: #26362e; font-size: 17px; line-height: 1.4; margin: 8px 0 4px; }
 .video-meta { color: #828b85; font-size: 11px; margin: 0; }
+.metadata-notice { color: #8a5b23; background: #fff8e9; border: 1px solid #f0ddb7; border-radius: 6px; padding: 8px 10px; margin: 10px 0 0; font-size: 11px; line-height: 1.5; }
 .download-controls { display: flex; align-items: end; gap: 10px; margin-top: 15px; }
 .download-controls label { display: flex; flex-direction: column; gap: 5px; color: #77837b; font-size: 10px; }
 .download-controls select { height: 36px; background: #fbfcfa; border: 1px solid #e0e4df; border-radius: 6px; color: #394a40; padding: 0 9px; font-size: 11px; }
@@ -267,6 +268,7 @@ html[data-theme="dark"] .consent-label,
 html[data-theme="dark"] .history-title strong,
 html[data-theme="dark"] .history-title small,
 html[data-theme="dark"] .trust-strip strong { color: #a7b5ab; }
+html[data-theme="dark"] .metadata-notice { color: #e4c68e; background: #332c1f; border-color: #5b4a2d; }
 html[data-theme="dark"] .api-key-section { background: #1b251f; border-color: #36453b; color: #aebbb1; }
 html[data-theme="dark"] .api-key-section h2 { color: #d8e6db; }
 html[data-theme="dark"] .api-key-section code { background: #2b3a30; color: #c8e2d0; }

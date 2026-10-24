@@ -14,7 +14,7 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 import { ZodError } from "zod";
-import { getTrending, ProviderError, searchVideos } from "./discovery.js";
+import { getTrending, getYouTubeOEmbed, ProviderError, searchVideos } from "./discovery.js";
 import { openApiDocument } from "./openapi.js";
 import {
   downloadQuerySchema,
@@ -125,6 +125,26 @@ async function getInfo(url: string): Promise<YtDlpInfo> {
     throw new Error("duration limit exceeded");
   }
   return data;
+}
+
+async function getInfoForLookup(url: string): Promise<{ data: YtDlpInfo; metadataOnly: boolean }> {
+  try {
+    return { data: await getInfo(url), metadataOnly: false };
+  } catch (error) {
+    const hostname = new URL(url).hostname.toLowerCase();
+    if (hostname !== "youtu.be" && !hostname.endsWith(".youtube.com") && hostname !== "youtube.com") {
+      throw error;
+    }
+    const metadata = await getYouTubeOEmbed(url);
+    return {
+      data: {
+        title: metadata.title,
+        uploader: metadata.uploader,
+        thumbnail: metadata.thumbnail ?? undefined,
+      },
+      metadataOnly: true,
+    };
+  }
 }
 
 function mapFormats(data: YtDlpInfo) {
@@ -261,16 +281,17 @@ app.post("/api/info", async (req, res, next) => {
   try {
     const body = infoRequestSchema.parse(req.body);
     const url = validateVideoUrl(body.url).toString();
-    const data = await getInfo(url);
+    const { data, metadataOnly } = await getInfoForLookup(url);
     res.json({
       title: data.title ?? "Untitled video",
       thumbnail: data.thumbnail
-        ? `/api/image?url=${encodeURIComponent(data.thumbnail)}`
+        ? `/api/image?url=${encodeURIComponent(validateThumbnailUrl(data.thumbnail).toString())}`
         : null,
       duration: data.duration ?? null,
       uploader: data.uploader ?? "Unknown creator",
       views: data.view_count ?? null,
       formats: mapFormats(data),
+      metadataOnly,
     });
   } catch (error) {
     next(error);

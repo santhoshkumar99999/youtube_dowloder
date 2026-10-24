@@ -3,7 +3,7 @@ import { languages, translate, type Language, type MessageKey } from "./i18n";
 import { ReportPage, SiteHeader, TermsPage } from "./SitePages";
 
 type Format = { id: string; ext: string; height: number | null; hasVideo: boolean; hasAudio: boolean; size: number | null };
-type VideoInfo = { title: string; thumbnail: string | null; duration: number | null; uploader: string; views: number | null; formats: Format[] };
+type VideoInfo = { title: string; thumbnail: string | null; duration: number | null; uploader: string; views: number | null; formats: Format[]; metadataOnly?: boolean };
 type HistoryItem = { title: string; url: string; format: string; date: string };
 type DownloadFormat = "mp4" | "mp3" | "m4a" | "thumbnail" | "srt" | "txt";
 type SearchPlatform = "youtube" | "instagram" | "tiktok";
@@ -542,6 +542,10 @@ export default function App() {
       setGifError("Fetch public video information first using the video link above.");
       return;
     }
+    if (video.metadataOnly) {
+      setGifError("This server can show public YouTube metadata, but cannot access the video media for GIF conversion.");
+      return;
+    }
     if (!gifConsent) {
       setGifError("Confirm permission to create a GIF from this video.");
       return;
@@ -640,6 +644,7 @@ export default function App() {
               <div className="video-platform">{platform ?? "VIDEO"} <span>·</span> PUBLIC CONTENT</div>
               <h2>{video.title}</h2>
               <p className="video-meta">{video.uploader} <span>·</span> {video.views?.toLocaleString() ?? "—"} views</p>
+              {video.metadataOnly && <p className="metadata-notice" role="status">Public metadata only: this server cannot access the video media, so downloads and GIF creation are unavailable.</p>}
               <div className="download-controls">
                 <label>
                   <span>{t("format")}</span>
@@ -658,7 +663,7 @@ export default function App() {
                     {["360", "480", "720", "1080", "best"].map((value) => <option key={value} value={value}>{value === "best" ? "Best available" : `${value}p`}</option>)}
                   </select>
                 </label>}
-                <button className="download-button" onClick={startDownload} disabled={downloadProgress !== null}>
+                <button className="download-button" onClick={startDownload} disabled={downloadProgress !== null || video.metadataOnly}>
                   {t("download")} <span aria-hidden="true">↓</span>
                 </button>
               </div>
@@ -701,7 +706,7 @@ export default function App() {
               <label className="extra-field">End (seconds)<input type="number" min="0.1" step="0.1" value={gifEnd} onChange={(event) => setGifEnd(event.target.value)} /></label>
             </div>
             <label className="consent-label extra-consent"><input type="checkbox" checked={gifConsent} onChange={(event) => setGifConsent(event.target.checked)} /><span>{t("consent")}</span></label>
-            <div className="gif-actions"><button className="secondary-button" onClick={() => void createGif()} disabled={gifLoading}>{gifLoading ? "Creating GIF…" : "Create GIF"}</button>
+            <div className="gif-actions"><button className="secondary-button" onClick={() => void createGif()} disabled={gifLoading || Boolean(video?.metadataOnly)}>{gifLoading ? "Creating GIF…" : "Create GIF"}</button>
               {gifLoading && <button className="cancel-gif-button" onClick={() => controllerRef.current?.abort(new Error("GIF creation canceled."))}>Cancel</button>}
             </div>
           </article>

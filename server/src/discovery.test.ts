@@ -1,7 +1,33 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ProviderError, searchVideos } from "./discovery.js";
+import { getYouTubeOEmbed, ProviderError, searchVideos } from "./discovery.js";
 import { searchRequestSchema } from "./validation.js";
+
+test("YouTube oEmbed provides public metadata without media extraction", async () => {
+  const originalFetch = globalThis.fetch;
+  let requested: URL | undefined;
+  globalThis.fetch = async (input) => {
+    requested = new URL(String(input));
+    return new Response(JSON.stringify({
+      title: "Public video title",
+      author_name: "Public channel",
+      thumbnail_url: "https://i.ytimg.com/vi/video-1/hqdefault.jpg",
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
+  };
+  try {
+    const result = await getYouTubeOEmbed("https://youtu.be/video-1");
+    assert.equal(requested?.origin, "https://www.youtube.com");
+    assert.equal(requested?.pathname, "/oembed");
+    assert.equal(requested?.searchParams.get("url"), "https://youtu.be/video-1");
+    assert.deepEqual(result, {
+      title: "Public video title",
+      uploader: "Public channel",
+      thumbnail: "https://i.ytimg.com/vi/video-1/hqdefault.jpg",
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
 
 test("YouTube search uses official search and video details APIs", async () => {
   const previousKey = process.env.YOUTUBE_API_KEY;

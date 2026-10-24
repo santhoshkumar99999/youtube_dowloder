@@ -109,6 +109,23 @@ type YouTubeVideo = {
   contentDetails?: { duration?: string };
 };
 
+export async function getYouTubeOEmbed(url: string): Promise<{
+  title: string;
+  uploader: string;
+  thumbnail: string | null;
+}> {
+  const query = new URLSearchParams({ url, format: "json" });
+  const body = await fetchJson(`https://www.youtube.com/oembed?${query}`);
+  if (typeof body.title !== "string" || typeof body.author_name !== "string") {
+    throw new ProviderError("YouTube returned incomplete public video metadata.");
+  }
+  return {
+    title: body.title,
+    uploader: body.author_name,
+    thumbnail: typeof body.thumbnail_url === "string" ? body.thumbnail_url : null,
+  };
+}
+
 async function youtubeVideos(ids: string[], key: string): Promise<YouTubeVideo[]> {
   if (!ids.length) return [];
   const query = new URLSearchParams({
